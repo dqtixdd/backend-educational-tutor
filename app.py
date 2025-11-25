@@ -8,6 +8,7 @@ from pathlib import Path
 import uuid
 from fastapi import UploadFile, File
 from jose import jwt, JWTError
+import logging
 
 # Auth imports
 from google.oauth2 import id_token
@@ -95,14 +96,22 @@ def get_current_user(x_token: str = Header(None)):
         raise HTTPException(401, "Invalid Token (Neither Google nor Custom)")
 
 # --- AUTH ENDPOINTS ---
+logger = logging.getLogger("uvicorn.error")
 
 @app.post("/register")
 def register(user: UserRegister):
-    success = memory.create_user(user.email, user.username, user.password)
-    if not success:
-        raise HTTPException(400, "Email already registered")
-    return {"message": "User created successfully"}
+    try:
+        success = memory.create_user(user.email, user.username, user.password)
+    except Exception as e:
+        # log full error to Render logs
+        logger.exception("Error while registering user %s", user.email)
+        raise HTTPException(status_code=500, detail="Registration failed")
 
+    if not success:
+        # email already exists
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    return {"message": "User created successfully"}
 @app.post("/login")
 def login(user: UserLogin):
     db_user = memory.verify_user(user.email, user.password)
