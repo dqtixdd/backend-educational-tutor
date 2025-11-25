@@ -12,3 +12,4 @@ python-jose==3.*
 google-auth==2.*
 google-auth-oauthlib==1.*
 passlib[bcrypt]==1.7.*
+python-multipart==0.0.9
