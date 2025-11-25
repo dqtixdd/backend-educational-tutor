@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from db import SessionLocal
 from models import User, Conversation, Message
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 class MemoryStore:
     def __init__(self):
