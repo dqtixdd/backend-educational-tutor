@@ -32,7 +32,7 @@ ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 Base.metadata.create_all(bind=engine)
 
 DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
-DATA_DIR.mkdir(exist_ok=True)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 CHROMA_PATH = os.getenv("CHROMA_PATH", "chroma")
 db = chromadb.PersistentClient(path=CHROMA_PATH)
