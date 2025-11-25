@@ -1,0 +1,13 @@
+fastapi==0.115.*
+uvicorn[standard]==0.30.*
+pydantic==2.*
+python-dotenv==1.*
+openai==1.*
+tiktoken==0.7.*
+pypdf==4.*
+chromadb==0.5.*
+SQLAlchemy==2.*
+psycopg2-binary==2.9.*
+python-jose==3.*
+google-auth==2.*
+google-auth-oauthlib==1.*

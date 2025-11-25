@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+.venv/
+venv/
+
+# Environment / secrets
+.env
+
+# Local DB & data
+history.db
+data/
+chroma/
+
+# Node stuff (if any)
+node_modules/
+
+# VS Code
+.vscode/
