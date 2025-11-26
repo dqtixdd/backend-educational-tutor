@@ -44,9 +44,9 @@ app = FastAPI()
 memory = MemoryStore()
 
 origins = [
-    "http://localhost:5173",  # local dev
-    "https://frontend-educational-tutor.vercel.app",  # your Vercel URL
-    # if Vercel preview URLs matter later, you can use regex instead
+    "http://localhost:5173",
+    "https://frontend-edu-tutor.vercel.app",
+    "null",
 ]
 
 app.add_middleware(
