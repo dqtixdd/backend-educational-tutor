@@ -33,6 +33,8 @@ ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
 Base.metadata.create_all(bind=engine)
 
+# --- local db: "sqlite:///history.db" ---
+
 DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
