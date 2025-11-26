@@ -9,6 +9,7 @@ import uuid
 from fastapi import UploadFile, File
 from jose import jwt, JWTError
 import logging
+from fastapi import BackgroundTasks
 
 # Auth imports
 from google.oauth2 import id_token
@@ -147,32 +148,39 @@ def list_pdfs(email: str = Depends(get_current_user)):
 
 @app.post("/upload_pdf")
 async def upload_pdf(
+    background: BackgroundTasks,
     file: UploadFile = File(...),
     email: str = Depends(get_current_user),
 ):
-    # Simple validation
+    # Validate
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(400, "Only PDF files are supported")
 
-    # Make filename unique (avoid collisions)
+    # Make unique filename
     safe_name = f"{uuid.uuid4().hex}_{file.filename}"
     dest = DATA_DIR / safe_name
 
-    # Save uploaded file
+    # Save very fast
     contents = await file.read()
     with open(dest, "wb") as f:
         f.write(contents)
 
-    # Ingest that file into Chroma
-    stats = ingest.ingest_single_pdf(dest)
+    # Queue ingest job (this runs AFTER response finishes)
+    background.add_task(ingest_pdf_background, dest, email, safe_name)
 
     return {
         "ok": True,
+        "status": "processing",
         "filename": safe_name,
-        "pages": stats["pages"],
-        "chunks": stats["chunks"],
     }
 
+def ingest_pdf_background(dest: Path, user_email: str, filename: str):
+    print(f"[BG TASK] Starting ingest for {filename}")
+    try:
+        stats = ingest.ingest_single_pdf(dest)
+        print(f"[BG TASK] Finished ingest: {stats}")
+    except Exception as e:
+        print(f"[BG TASK] ERROR ingesting {filename}: {e}")
 
 @app.delete("/pdfs/{filename}")
 def delete_pdf(filename: str, email: str = Depends(get_current_user)):
@@ -234,10 +242,12 @@ def chat(req: ChatRequest, email: str = Depends(get_current_user)):
         "you may use your own general knowledge and problem-solving skills.\n"
         "- If the context is mostly irrelevant, rely on your own knowledge but you can mention "
         "that the materials do not directly cover the exact question.\n\n"
-        "Structure your answer into sections:\n"
-        "1) 'From the materials:' – what can be justified from the provided context.\n"
-        "2) 'Beyond the materials:' – any helpful extra explanation, examples, or problem-solving "
-        "that is not directly stated in the context (omit this section if not needed)."
+        "Structure your answer using MARKDOWN headings:\n"
+        "## 📚 From the materials\n"
+        "- What can be justified strictly from the provided excerpts.\n\n"
+        "## 🧠 Beyond the materials (optional)\n"
+        "- Additional reasoning, examples, background knowledge.\n"
+        "- Include this section only if needed.\n"
     )
 
     # User message combining context + question
@@ -269,7 +279,10 @@ Beyond the materials (optional):
     answer = comp.choices[0].message.content
     sources = [{"source": m["source"], "page": m["page"], "id": i} for m, i in zip(metas, ids)]
 
+    answer = answer.replace("From the materials:", "## 📚 From the materials")
+    answer = answer.replace("Beyond the materials:", "## 🧠 Beyond the materials")
     # 4. Save Assistant Msg
     memory.add_message(cid, "assistant", answer, sources)
+    
 
     return ChatResponse(answer=answer, sources=sources, rewritten_question=rewritten)
