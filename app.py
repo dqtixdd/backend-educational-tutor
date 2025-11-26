@@ -248,6 +248,10 @@ def chat(req: ChatRequest, email: str = Depends(get_current_user)):
         "## 🧠 Beyond the materials (optional)\n"
         "- Additional reasoning, examples, background knowledge.\n"
         "- Include this section only if needed.\n"
+        "Whenever you write a mathematical formula, put it inside a fenced code block using the 'math' language, for example:\n"
+        "```math\n"
+        "a^2 + b^2 = c^2\n"
+        "```"
     )
 
     # User message combining context + question
